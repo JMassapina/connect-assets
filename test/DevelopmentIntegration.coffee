@@ -25,7 +25,9 @@ exports['CoffeeScript is served as JavaScript'] = (test) ->
     test.equals res.headers['content-type'], 'application/javascript'
     expectedBody = '''
     (function() {
+    
       console.log(\'Howdy\');
+    
     }).call(this);\n
     '''
     test.equals body, expectedBody
@@ -185,6 +187,8 @@ exports['Script source files can contain nothing but directives'] = (test) ->
     throw err if err
     test.equals body, '''
     (function() {
+
+
 
     }).call(this);\n
     '''
