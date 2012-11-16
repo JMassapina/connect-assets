@@ -262,12 +262,17 @@ exports.cssCompilers = cssCompilers =
       libs.bootstrap or= try require 'bootstrap-stylus' catch e then (-> ->)
       options = @optionsMap[sourcePath] ?=
         filename: sourcePath
+      img = (node) ->
+        imgPath = module.exports.instance.options.helperContext.img(node.val)
+        new libs.stylus.nodes.String(imgPath)
+      
       libs.stylus(source, options)
           .use(libs.bootstrap())
           .use(libs.nib())
           .use(libs.bootstrap())
           .set('compress', @compress)
           .set('include css', true)
+          .define('img', img)
           .render callback
       result
 
