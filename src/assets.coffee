@@ -29,13 +29,14 @@ module.exports = exports = (options = {}) ->
   options.pathsOnly ?= false
   jsCompilers = _.extend jsCompilers, options.jsCompilers || {}
 
-  connectAssets = module.exports.instance = new ConnectAssets options
+  connectAssets = new ConnectAssets options
   connectAssets.createHelpers options
   connectAssets.cache.middleware
 
 class ConnectAssets
   constructor: (@options) ->
     @cache = connectCache()
+    @cache.middleware.connectAssets = @
     @snockets = new Snockets src: @options.src
 
     # Things that we must cache to work efficiently with CSS compilers
@@ -174,7 +175,7 @@ class ConnectAssets
             @cssSourceFiles[sourcePath] = {data, mtime: stats.mtime}
             source = data.toString 'utf8'
           startTime = new Date
-          css = cssCompilers[ext].compileSync @absPath(sourcePath), source
+          css = cssCompilers[ext].compileSync @absPath(sourcePath), source, @options.helperContext
           if css is @compiledCss[sourcePath]?.data.toString 'utf8'
             alreadyCached = true
           else
@@ -250,7 +251,7 @@ exports.cssCompilers = cssCompilers =
 
   styl:
     optionsMap: {}
-    compileSync: (sourcePath, source) ->
+    compileSync: (sourcePath, source, helperContext) ->
       result = ''
       callback = (err, js) ->
         throw err if err
@@ -263,7 +264,7 @@ exports.cssCompilers = cssCompilers =
       options = @optionsMap[sourcePath] ?=
         filename: sourcePath
       img = (node) ->
-        imgPath = module.exports.instance.options.helperContext.img(node.val)
+        imgPath = helperContext.img(node.val)
         new libs.stylus.nodes.String(imgPath)
       
       libs.stylus(source, options)
@@ -314,7 +315,7 @@ exports.cssCompilers = cssCompilers =
 
       less
 
-    compileSync: (sourcePath, source) ->
+    compileSync: (sourcePath, source, helperContext) ->
       result = ""
       libs.less or= @patchLess (require 'less')
       options = @optionsMap
@@ -326,6 +327,7 @@ exports.cssCompilers = cssCompilers =
         throw err if err
         result = tree.toCSS({compress: compress})
 
+      
       new libs.less.Parser(options).parse(source, callback)
       result
 

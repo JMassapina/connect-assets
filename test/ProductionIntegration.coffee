@@ -3,7 +3,8 @@ request = require 'request'
 
 app = require('connect').createServer()
 assets = require('../lib/assets.js')
-app.use assets buildDir: false  # disable saving built assets to file
+middleware = assets buildDir: false  # disable saving built assets to file
+app.use middleware
 app.listen 3589
 
 exports['Far-future expires and MD5 hash strings are used for images'] = (test) ->
@@ -18,7 +19,7 @@ exports['Far-future expires and MD5 hash strings are used for images'] = (test) 
 exports['Far-future expires and MD5 hash strings are used for CSS'] = (test) ->
   cssTag = "<link rel='stylesheet' href='/css/style-666055206709fc94e56e1a59caa615dd.css'>"
   test.equals css('style'), cssTag
-  test.equals assets.instance.buildFilenames['css/style.styl'], 'css/style-666055206709fc94e56e1a59caa615dd.css'
+  test.equals middleware.connectAssets.buildFilenames['css/style.styl'], 'css/style-666055206709fc94e56e1a59caa615dd.css'
 
   request 'http://localhost:3589/css/style-666055206709fc94e56e1a59caa615dd.css', (err, res, body) ->
     throw err if err
@@ -28,7 +29,7 @@ exports['Far-future expires and MD5 hash strings are used for CSS'] = (test) ->
 
     # test repeated requests
     test.equals css('style'), cssTag
-    test.equals assets.instance.buildFilenames['css/style.styl'], 'css/style-666055206709fc94e56e1a59caa615dd.css'
+    test.equals middleware.connectAssets.buildFilenames['css/style.styl'], 'css/style-666055206709fc94e56e1a59caa615dd.css'
 
     request 'http://localhost:3589/css/style-666055206709fc94e56e1a59caa615dd.css', (err, res, body) ->
       throw err if err
@@ -40,7 +41,7 @@ exports['Far-future expires and MD5 hash strings are used for CSS'] = (test) ->
 exports['JS dependencies are concatenated and minified'] = (test) ->
   jsTag = "<script src='/js/dependent-057747a1cbabcbd2279e4f358bc4723f.js'></script>"
   test.equals js('dependent'), jsTag
-  test.equals assets.instance.buildFilenames['js/dependent.coffee'], 'js/dependent-057747a1cbabcbd2279e4f358bc4723f.js'
+  test.equals middleware.connectAssets.buildFilenames['js/dependent.coffee'], 'js/dependent-057747a1cbabcbd2279e4f358bc4723f.js'
 
   request 'http://localhost:3589/js/dependent-057747a1cbabcbd2279e4f358bc4723f.js', (err, res, body) ->
     throw err if err
@@ -52,7 +53,7 @@ exports['JS dependencies are concatenated and minified'] = (test) ->
 
     # test repeated requests
     test.equals js('dependent'), jsTag
-    test.equals assets.instance.buildFilenames['js/dependent.coffee'], 'js/dependent-057747a1cbabcbd2279e4f358bc4723f.js'
+    test.equals middleware.connectAssets.buildFilenames['js/dependent.coffee'], 'js/dependent-057747a1cbabcbd2279e4f358bc4723f.js'
 
     request 'http://localhost:3589/js/dependent-057747a1cbabcbd2279e4f358bc4723f.js', (err, res, body) ->
       throw err if err

@@ -42,6 +42,7 @@ task 'test', 'Run the test suite (and re-run if anything changes)', ->
         'CdnIntegration'
         'BenchmarkDynamic'
         'BenchmarkStatic'
+        'Isolation'
       ]
       suiteIndex = 0
       do runNextTestSuite = ->
