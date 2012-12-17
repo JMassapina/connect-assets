@@ -2,6 +2,7 @@
 
 connectCache  = require 'connect-file-cache'
 Snockets      = require 'snockets'
+Browserify    = require './browserify'
 
 crypto        = require 'crypto'
 fs            = require 'fs'
@@ -27,6 +28,7 @@ module.exports = exports = (options = {}) ->
   options.detectChanges ?= true
   options.minifyBuilds ?= true
   options.pathsOnly ?= false
+  options.browserify ?= false
   jsCompilers = _.extend jsCompilers, options.jsCompilers || {}
 
   connectAssets = new ConnectAssets options
@@ -37,8 +39,13 @@ class ConnectAssets
   constructor: (@options) ->
     @cache = connectCache()
     @cache.middleware.connectAssets = @
+    
     @snockets = new Snockets src: @options.src
-
+    @jsPackager = if @options.browserify
+                      new Browserify(src: @options.src, buildFilenamer: @options.buildFilenamer)
+                  else
+                      @snockets
+    
     # Things that we must cache to work efficiently with CSS compilers
     @cssSourceFiles = {}
     @compiledCss    = {}
@@ -208,7 +215,7 @@ class ConnectAssets
   compileJS: (route) ->
     if !@options.detectChanges and @cachedRoutePaths[route]
       return @cachedRoutePaths[route]
-
+    
     for ext in ['js'].concat (ext for ext of jsCompilers)
       sourcePath = stripExt(route) + ".#{ext}"
       try
@@ -227,11 +234,14 @@ class ConnectAssets
                   fs.writeFile buildPath, concatenation
             else
               filename = @buildFilenames[sourcePath]
-          snocketsFlags = minify: @options.minifyBuilds, async: false
-          @snockets.getConcatenation sourcePath, snocketsFlags, callback
+          
+          options = debug: true, watch: @options.detectChanges
+          
+          @jsPackager.getConcatenation(sourcePath, options, callback)
+          
           return @cachedRoutePaths[route] = ["/#{filename}"]
         else
-          chain = @snockets.getCompiledChain sourcePath, async: false
+          chain = @jsPackager.getCompiledChain sourcePath, async: false
           return @cachedRoutePaths[route] = for {filename, js} in chain
             filename = stripExt(filename) + '.js'
             @cache.set filename, js
@@ -245,6 +255,7 @@ class ConnectAssets
       path.join @options.src, route
     else
       path.join process.cwd(), @options.src, route
+  
 
 # ## Asset compilers
 exports.cssCompilers = cssCompilers =
