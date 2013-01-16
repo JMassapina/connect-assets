@@ -235,7 +235,7 @@ class ConnectAssets
             else
               filename = @buildFilenames[sourcePath]
           
-          options = debug: true, watch: @options.detectChanges
+          options = debug: true, watch: @options.detectChanges, minify: @options.minifyBuilds
           
           @jsPackager.getConcatenation(sourcePath, options, callback)
           
