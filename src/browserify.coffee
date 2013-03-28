@@ -10,7 +10,9 @@ module.exports = class BrowserifyWrapper
     
     requireBundle: (flags, cb) ->
         requireRoute = 'js/require.js'
-        requireBundle = new Browserify()
+        requireBundle = new Browserify(
+            cache: @options.browserifyCache
+        )
         
         if flags.minify
             requireBundle.register('post', @_minify)
@@ -40,7 +42,7 @@ module.exports = class BrowserifyWrapper
             bundle = @jsBundles[filePath]
             return callback(null, bundle.bundle(), @changedPaths[filePath])
         
-        bundle = Browserify(debug: true, watch: flags.watch)
+        bundle = Browserify(debug: true, watch: flags.watch, cache: @options.browserifyCache)
         bundle.files = {}
         bundle.prepends = []
         

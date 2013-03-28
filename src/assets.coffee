@@ -42,7 +42,11 @@ class ConnectAssets
     
     @snockets = new Snockets src: @options.src
     @jsPackager = if @options.browserify
-                      new Browserify(src: @options.src, buildFilenamer: @options.buildFilenamer)
+                      new Browserify(
+                        src: @options.src, 
+                        buildFilenamer: @options.buildFilenamer
+                        browserifyCache: @options.browserifyCache
+                      )
                   else
                       @snockets
     
